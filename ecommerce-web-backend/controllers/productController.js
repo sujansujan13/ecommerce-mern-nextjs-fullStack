@@ -5,13 +5,28 @@ const getAllProducts = async (req, res) => {
     // req.query batw category shodhne (e.g., /api/products?category=electronics)
     // Values come after ?
     // /api/products?category=electronics&page=2
-    const { category } = req.query;
+    const { search, category } = req.query;
 
     let filter = {};
     if (category) {
       filter.category = category; // Query filter ready paryo
     }
 
+    if (search) {
+      // ✅ Escape special regex characters before passing to MongoDB
+      // Without this: search="(" crashes with "Invalid regular expression"
+      // e.g. "(", "[", ".", "*", "+" are all special regex chars
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+      filter.$or = [
+        { name: { $regex: escapedSearch, $options: "i" } },
+        { description: { $regex: escapedSearch, $options: "i" } },
+        { category: { $regex: escapedSearch, $options: "i" } },
+        { subCategory: { $regex: escapedSearch, $options: "i" } },
+        { brand: { $regex: escapedSearch, $options: "i" } },
+        { tags: { $in: [new RegExp(escapedSearch, "i")] } },
+      ];
+    }
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
 

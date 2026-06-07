@@ -83,4 +83,22 @@ const productSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+/* ----------------------------------------------------
+   TEXT SEARCH INDEX (FAST + SCALABLE)
+   Use this for production search
+---------------------------------------------------- */
+productSchema.index({
+  name: "text",
+  description: "text",
+  category: "text",
+  subCategory: "text",
+  tags: "text",
+  brand: "text",
+});
+
+productSchema.index({ slug: 1 }); // For fast lookups by slug
+productSchema.index({ category: 1 }); // For category-based queries
+productSchema.index({ price: 1 }); // For price range queries
+productSchema.index({ rating: -1 }); // For sorting by rating
+
 module.exports = mongoose.model("product", productSchema);
