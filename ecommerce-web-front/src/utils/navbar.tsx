@@ -2,18 +2,21 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { MapPin, ShoppingCart, User } from "lucide-react";
 import { getCategoryFromPath } from "./getCategoryFromPath";
-import { useAuth } from "../../context/AuthProvider";
+import { useAuth } from "../context/AuthProvider";
 import UserIConCom from "./UserIConCom";
-import { logoutUser } from "@/api/authApi";
+import SearchDialog from "./SearchDialog";
 
 export default function Navbar() {
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
   const activeCategory = getCategoryFromPath(pathname);
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [Loading, setLoading] = useState(true);
 
   const navlinks = [
     { label: "Home", href: "/", iconName: "house" },
@@ -21,6 +24,52 @@ export default function Navbar() {
     { label: "Fashion", href: "/fashion", iconName: "handbag" },
     { label: "Groceries", href: "/groceries", iconName: "shopping-basket" },
   ];
+
+  const fetchProduct = async (value: string, signal: AbortSignal) => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `http://localhost:4000/api/products?search=${encodeURIComponent(value)}`,
+        {
+          signal,
+        },
+      );
+
+      // 🧠 IMPORTANT: check before parsing JSON
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Backend error:", text);
+        return;
+      }
+
+      const data = await res.json();
+
+      setResults(data.products || data || []); // Handle both { products: [...] } and [...] formats
+    } catch (error) {
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error(error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setResults([]);
+      return;
+    }
+    const controller = new AbortController();
+
+    const delayDebounceFn = setTimeout(() => {
+      fetchProduct(searchQuery, controller.signal);
+    }, 500); // Debounce by 500ms
+
+    return () => {
+      clearTimeout(delayDebounceFn);
+      controller.abort();
+    };
+  }, [searchQuery]);
 
   const handleLogout = async () => {
     await logout();
@@ -95,6 +144,14 @@ export default function Navbar() {
                 style={{ height: "1.5rem", width: "1.5rem" }}
               />
             </Button>
+
+            <SearchDialog
+              value={searchQuery}
+              results={results}
+              loading={Loading}
+              onChange={setSearchQuery}
+              placeholder="Search products..."
+            />
 
             {/* <Button variant={"ghost"} aria-label="Profile">
               <User

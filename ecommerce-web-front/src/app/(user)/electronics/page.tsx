@@ -48,45 +48,67 @@ export default function page() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // * ----------------------------------------------------
+  //    🚀 CENTRALIZED API CALL FUNCTION (BEST PRACTICE)
+  //    → makes future scaling easier (filters, pagination, etc.)
+  // ---------------------------------------------------- */
+  const fetchElectronics = async (signal: AbortSignal) => {
+    try {
+      setLoading(true);
+
+      // 🔥 BUILD QUERY PARAMS CLEANLY (SCALABLE APPROACH)
+      const params = new URLSearchParams();
+      params.append("category", "electronics");
+
+      // ✅ SEARCH QUERY (only if exists)
+      if (searchQuery) {
+        params.append("search", searchQuery);
+      }
+
+      const res = await fetch(
+        `http://localhost:4000/api/products?${params.toString()}`,
+        { signal },
+      );
+
+      if (!res.ok) throw new Error("Fetch failed");
+
+      const data = await res.json();
+      setProducts(data.products || data);
+    } catch (error) {
+      if (error instanceof Error) {
+        // React le unmount garda aune intentional errors lai ignore garne
+        // 🧠 Ignore Abort errors (React Strict Mode safe)
+        if (error.name === "AbortError") return;
+
+        // Baki real network errors lai matra print garne
+        console.error("Real API Error:", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // useEffect to fetch products from the API when the component mounts
   useEffect(() => {
     // Yasko mukhya karan "Race Condition" ra "Memory Leak" bata bachnu ho.
     const controller = new AbortController();
-    const { signal } = controller;
 
-    const fetchElectronics = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(
-          "http://localhost:4000/api/products?category=electronics",
-          { signal },
-        );
-
-        if (!res.ok) throw new Error("Fetch failed");
-
-        const data = await res.json();
-        setProducts(data.products || data);
-      } catch (error) {
-        if (error instanceof Error) {
-          // React le unmount garda aune intentional errors lai ignore garne
-          if (
-            error.name === "AbortError" ||
-            error.message.includes("aborted")
-          ) {
-            // Kehi pani nagarne, yo normal behavior ho Strict Mode ma
-            return;
-          }
-
-          // Baki real network errors lai matra print garne
-          console.error("Real API Error:", error);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchElectronics();
+    fetchElectronics(controller.signal);
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const debounceTimer = setTimeout(() => {
+      fetchElectronics(controller.signal);
+    }, 500); // 500ms debounce,// 👈 debounce only for user input
+
+    return () => {
+      clearTimeout(debounceTimer);
+      controller.abort();
+    };
+  }, [searchQuery]);
 
   return (
     <div className="common-box py-6 md:py-10 space-y-3 bg-[#fff8f7]">

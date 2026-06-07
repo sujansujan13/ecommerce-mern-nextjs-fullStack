@@ -17,40 +17,52 @@ export default function page() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("popularity");
 
+  const fetchGroceries = async (signal: AbortSignal) => {
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `http://localhost:4000/api/products?category=groceries&search=${searchQuery}`,
+        { signal },
+      );
+
+      if (!res.ok) throw new Error("Fetch Error");
+
+      const data = await res.json();
+      setProducts(data.products || data);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === "AbortError" || error.message.includes("aborted")) {
+          return;
+        }
+        console.error("Real API error", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
 
-    const fetchGroceries = async () => {
-      try {
-        setLoading(true);
-
-        const res = await fetch(
-          "http://localhost:4000/api/products?category=groceries",
-          { signal },
-        );
-
-        if (!res.ok) throw new Error("Fetch Error");
-
-        const data = await res.json();
-        setProducts(data.products || data);
-      } catch (error) {
-        if (error instanceof Error) {
-          if (
-            error.name === "AbortError" ||
-            error.message.includes("aborted")
-          ) {
-            return;
-          }
-          console.error("Real API error", error);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchGroceries();
+    fetchGroceries(signal);
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    // Debounce the search input to avoid too many API calls
+    const debounceTimeout = setTimeout(() => {
+      fetchGroceries(signal);
+    }, 500); // Adjust the debounce delay as needed
+
+    return () => {
+      clearTimeout(debounceTimeout);
+      controller.abort();
+    };
+  }, [searchQuery]);
 
   return (
     // {/* Page level vertical space */}

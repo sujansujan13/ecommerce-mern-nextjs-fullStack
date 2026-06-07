@@ -7,7 +7,7 @@ import Navbar from "@/utils/navbar";
 import MobileNav from "@/utils/mobile-nav";
 import Footer from "@/utils/footer";
 import { cn } from "@/lib/utils";
-import AuthProvider from "../../context/AuthProvider";
+import AuthProvider from "../context/AuthProvider";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 

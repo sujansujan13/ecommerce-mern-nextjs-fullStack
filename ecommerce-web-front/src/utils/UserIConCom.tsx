@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CalendarArrowDown, Heart, LogOut, Trophy, User } from "lucide-react";
-import { useAuth } from "../../context/AuthProvider";
+import { useAuth } from "../context/AuthProvider";
 
 interface User {
   name: string;

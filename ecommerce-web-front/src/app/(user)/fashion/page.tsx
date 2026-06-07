@@ -59,40 +59,60 @@ export default function page() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const fetchFashion = async (signal: AbortSignal) => {
+    try {
+      setLoading(true);
+
+      const params = new URLSearchParams();
+      params.append("category", "fashion");
+
+      if (searchQuery) {
+        params.append("search", searchQuery);
+      }
+
+      const res = await fetch(
+        `http://localhost:4000/api/products?${params.toString()}`,
+        { signal },
+      );
+
+      if (!res.ok) throw new Error("Fetch Failed");
+
+      const data = await res.json();
+      console.log(data);
+      setProducts(data.products || data);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === "AbortError") return;
+
+        console.error("Real API Error", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
-    const fetchFashion = async () => {
-      try {
-        setLoading(true);
 
-        const res = await fetch(
-          " http://localhost:4000/api/products?category=fashion",
-          { signal },
-        );
-
-        if (!res.ok) throw new Error("Fetch Failed");
-
-        const data = await res.json();
-        console.log(data);
-        setProducts(data.products || data);
-      } catch (error) {
-        if (error instanceof Error) {
-          if (
-            error.name === "AbortError" ||
-            error.message.includes("aborted")
-          ) {
-            return;
-          }
-          console.error("Real API Error", error);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFashion();
+    fetchFashion(signal);
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    // Debounce the search input to avoid too many API calls
+    const debounceTimeout = setTimeout(() => {
+      fetchFashion(signal);
+    }, 500); // Adjust the debounce delay as needed
+
+    return () => {
+      clearTimeout(debounceTimeout);
+      controller.abort();
+    };
+  }, [searchQuery]);
 
   return (
     <div className="w-full h-full mx-auto bg-[#fff8f7] space-y-6 pb-10 ">
