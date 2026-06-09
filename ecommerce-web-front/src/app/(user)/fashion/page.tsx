@@ -25,6 +25,7 @@ import {
 import React, { ComponentType, useEffect, useState } from "react";
 import Link from "next/link";
 import SearchInput from "@/utils/SearchInput";
+import { productApi } from "@/api/productApi";
 
 // #CURIOUS#:LucideIcon,ComponentType,export
 export interface CategoryType {
@@ -48,71 +49,47 @@ const categoryIconsData = [
   { id: 5, iconName: Watch, categoryName: "Accessories" },
 ];
 const ordering = [
-  { label: "Newest First", value: "newest first" },
-  { label: "Price:Low to High", value: "low to high" },
-  { label: "Price:High to Low", value: "high to low" },
-  { label: "Most Popular", value: "most popular" },
+  { label: "Newest First", value: "Newest Arrival" },
+  { label: "Price:Low to High", value: "Price:Low to High" },
+  { label: "Price:High to Low", value: "Price:High to Low" },
+  { label: "Most Popular", value: "Popularity" },
 ];
 
 export default function page() {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const fetchFashion = async (signal: AbortSignal) => {
-    try {
-      setLoading(true);
-
-      const params = new URLSearchParams();
-      params.append("category", "fashion");
-
-      if (searchQuery) {
-        params.append("search", searchQuery);
-      }
-
-      const res = await fetch(
-        `http://localhost:4000/api/products?${params.toString()}`,
-        { signal },
-      );
-
-      if (!res.ok) throw new Error("Fetch Failed");
-
-      const data = await res.json();
-      console.log(data);
-      setProducts(data.products || data);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.name === "AbortError") return;
-
-        console.error("Real API Error", error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [sortBy, setSortBy] = useState("Popularity");
 
   useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
+    setLoading(true);
+    const controller = new AbortController(); // for cleanup
 
-    fetchFashion(signal);
-    return () => controller.abort();
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
-
-    // Debounce the search input to avoid too many API calls
-    const debounceTimeout = setTimeout(() => {
-      fetchFashion(signal);
-    }, 500); // Adjust the debounce delay as needed
-
-    return () => {
-      clearTimeout(debounceTimeout);
-      controller.abort();
-    };
-  }, [searchQuery]);
+    const debounceTimer = setTimeout(() => {
+      productApi
+        .getProducts({
+          category: "fashion",
+          search: searchQuery,
+          sort: sortBy,
+        })
+        .then((data) => {
+          setProducts(data.products);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            console.error(err);
+          }
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+      return () => {
+        clearTimeout(debounceTimer); // clear timeout on unmount or before next effect
+        controller.abort(); // cancel fetch if component unmounts
+      };
+    }, 500); // debounce API calls by 500ms
+  }, [searchQuery, sortBy]);
 
   return (
     <div className="w-full h-full mx-auto bg-[#fff8f7] space-y-6 pb-10 ">
@@ -146,7 +123,10 @@ export default function page() {
                 <h3 className="text-[16px]">Sort by:</h3>
 
                 <div>
-                  <Select>
+                  <Select
+                    value={sortBy}
+                    onValueChange={(val) => setSortBy(val)}
+                  >
                     <SelectTrigger className="w-full min-w-60 text-sm text-[#680007] font-medium">
                       <SelectValue placeholder="Select an Option" />
                     </SelectTrigger>

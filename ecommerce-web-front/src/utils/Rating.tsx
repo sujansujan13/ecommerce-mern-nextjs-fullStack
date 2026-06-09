@@ -21,14 +21,14 @@ export default function Rating({
           ) : value >= index - 0.5 ? (
             <StarHalf size={starSize} className={starClassname} />
           ) : (
-            <Star size={starSize} className={starClassname} />
+            <Star size={starSize} className="stroke-gray-300 fill-none" />
           )}
         </span>
       ))}
       <div className="">
         {text && (
           <h3
-            className="text-[10px] text-[#8d706d"
+            className="text-[10px] text-[#8d706d] "
             title={text.toLocaleString()}
           >
             {text}

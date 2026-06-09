@@ -8,27 +8,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { SelectIcon } from "@base-ui/react";
 
 interface sortProps {
-  value: string;
-  onChange: (value: string) => void;
+  defaultValue: string;
+  onValueChange: (value: string) => void;
 }
 
-export default function SortDropDown({ value, onChange }: sortProps) {
+export default function SortDropDown({
+  defaultValue,
+  onValueChange,
+}: sortProps) {
   return (
     <div className="flex items-center justify-between gap-3 ">
       <span className="text-sm font-bold text-[#59413E] shrink-0">
         Sort by:
       </span>
       <Select
-        value={value}
+        defaultValue={defaultValue}
         // FIX IS HERE: Radix/Shadcn uses onValueChange and hands you a clean string directly!
-        onValueChange={(val) => onChange(val)}
+        onValueChange={(val) => onValueChange(val)}
       >
         <SelectTrigger
           id="sort"
-          className="w-full  border border-[#8D706D] p-4.5 bg-white rounded-2xl font-medium text-amber-900 text-[16px] overflow-hidden"
+          className="w-full min-w-60  border border-[#8D706D] p-4.5 bg-white rounded-2xl font-medium text-amber-900 text-[16px] overflow-hidden"
         >
           <SelectValue placeholder="Select an Option" />
         </SelectTrigger>
@@ -40,27 +42,27 @@ export default function SortDropDown({ value, onChange }: sortProps) {
 
             <SelectItem
               className="text-[16px] font-semibold text-[#8D706D] transition-colors duration-100 cursor-pointer "
-              value="popularity"
+              value="Popularity"
             >
               Popularity
             </SelectItem>
             <SelectItem
               className="text-[16px] font-semibold text-[#8D706D] transition-colors duration-100 cursor-pointer "
-              value="price-low"
+              value="Price:Low to High"
             >
               Price:Low to High
             </SelectItem>
             <SelectItem
               className="text-[16px] font-semibold text-[#8D706D] transition-colors duration-100 cursor-pointer "
-              value="price-high"
+              value="Price:High to Low"
             >
               Price:High to Low
             </SelectItem>
             <SelectItem
               className="text-[16px] font-semibold text-[#8D706D] transition-colors duration-100 cursor-pointer"
-              value="newest"
+              value="Newest Arrival"
             >
-              Newest Arrivals
+              Newest Arrival
             </SelectItem>
           </SelectGroup>
         </SelectContent>

@@ -17,11 +17,12 @@ import Link from "next/link";
 import BreadCrumb from "@/utils/Breadcrumb";
 import LeftSidebar from "@/components/Electronics/LeftSidebar";
 import SearchInput from "@/utils/SearchInput";
+import { productApi } from "@/api/productApi";
 
 const sorting = [
   { label: "Popularity", value: "Popularity" },
-  { label: "Price(Low to High)", value: "Price(Low to High)" },
-  { label: "Price(High to Low)", value: "Price(High to Low)" },
+  { label: "Price: Low to High", value: "Price:Low to High" },
+  { label: "Price: High to Low", value: "Price:High to Low" },
   { label: "Newest Arrival", value: "Newest Arrival" },
 ];
 const Deals = [
@@ -47,68 +48,43 @@ export default function page() {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("Popularity");
 
   // * ----------------------------------------------------
-  //    🚀 CENTRALIZED API CALL FUNCTION (BEST PRACTICE)
+  //    🚀 <CENTRALIZED</CENTRALIZED> API CALL FUNCTION (BEST PRACTICE)
   //    → makes future scaling easier (filters, pagination, etc.)
   // ---------------------------------------------------- */
-  const fetchElectronics = async (signal: AbortSignal) => {
-    try {
-      setLoading(true);
-
-      // 🔥 BUILD QUERY PARAMS CLEANLY (SCALABLE APPROACH)
-      const params = new URLSearchParams();
-      params.append("category", "electronics");
-
-      // ✅ SEARCH QUERY (only if exists)
-      if (searchQuery) {
-        params.append("search", searchQuery);
-      }
-
-      const res = await fetch(
-        `http://localhost:4000/api/products?${params.toString()}`,
-        { signal },
-      );
-
-      if (!res.ok) throw new Error("Fetch failed");
-
-      const data = await res.json();
-      setProducts(data.products || data);
-    } catch (error) {
-      if (error instanceof Error) {
-        // React le unmount garda aune intentional errors lai ignore garne
-        // 🧠 Ignore Abort errors (React Strict Mode safe)
-        if (error.name === "AbortError") return;
-
-        // Baki real network errors lai matra print garne
-        console.error("Real API Error:", error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // useEffect to fetch products from the API when the component mounts
-  useEffect(() => {
-    // Yasko mukhya karan "Race Condition" ra "Memory Leak" bata bachnu ho.
-    const controller = new AbortController();
-
-    fetchElectronics(controller.signal);
-    return () => controller.abort();
-  }, []);
+  // refetch when search or sort changes
 
   useEffect(() => {
-    const controller = new AbortController();
+    setLoading(true);
+    const controller = new AbortController(); // for cleanup
 
     const debounceTimer = setTimeout(() => {
-      fetchElectronics(controller.signal);
-    }, 500); // 500ms debounce,// 👈 debounce only for user input
-
-    return () => {
-      clearTimeout(debounceTimer);
-      controller.abort();
-    };
-  }, [searchQuery]);
+      productApi
+        .getProducts({
+          category: "electronics",
+          search: searchQuery,
+          sort: sortBy,
+        })
+        .then((data) => {
+          setProducts(data.products);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            console.error(err);
+          }
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+      return () => {
+        clearTimeout(debounceTimer); // clear timeout on unmount or before next effect
+        controller.abort(); // cancel fetch if component unmounts
+      };
+    }, 500); // debounce API calls by 500ms
+  }, [searchQuery, sortBy]);
 
   return (
     <div className="common-box py-6 md:py-10 space-y-3 bg-[#fff8f7]">
@@ -147,7 +123,10 @@ export default function page() {
             </div>
             <div className="flex   items-center gap-x-2">
               <h3 className="font-medium md:w-full ">Sort by:</h3>
-              <Select defaultValue={`Popularity`}>
+              <Select
+                defaultValue={`Popularity`}
+                onValueChange={(value) => setSortBy(value)}
+              >
                 <SelectTrigger
                   className={` border-none w-full max-w-60 text-sm text-[#680007] font-medium `}
                 >

@@ -1,3 +1,4 @@
+// Frontend triggers search/sort via state changes → sends query params → backend builds MongoDB filter + sort logic → returns updated products list.
 const Product = require("../models/product");
 
 const getAllProducts = async (req, res) => {
@@ -5,7 +6,7 @@ const getAllProducts = async (req, res) => {
     // req.query batw category shodhne (e.g., /api/products?category=electronics)
     // Values come after ?
     // /api/products?category=electronics&page=2
-    const { search, category } = req.query;
+    const { sort, search, category } = req.query;
 
     let filter = {};
     if (category) {
@@ -24,14 +25,29 @@ const getAllProducts = async (req, res) => {
         { category: { $regex: escapedSearch, $options: "i" } },
         { subCategory: { $regex: escapedSearch, $options: "i" } },
         { brand: { $regex: escapedSearch, $options: "i" } },
-        { tags: { $in: [new RegExp(escapedSearch, "i")] } },
+        { tags: { $regex: escapedSearch, $options: "i" } },
       ];
     }
+
+    let sortOption = {};
+    if (sort === "Price:Low to High") {
+      sortOption.price = 1;
+    }
+    if (sort === "Price:High to Low") {
+      sortOption.price = -1;
+    }
+    if (sort === "Newest Arrival") {
+      sortOption.createdAt = -1;
+    }
+    if (sort === "Popularity") {
+      sortOption.rating = -1;
+    }
+
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
 
     const products = await Product.find(filter)
-      .sort({ createdAt: -1 })
+      .sort(sortOption)
       .skip((page - 1) * limit)
       .limit(limit)
       // Without .lean():

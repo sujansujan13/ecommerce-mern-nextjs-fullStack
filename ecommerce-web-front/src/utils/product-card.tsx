@@ -144,7 +144,10 @@ function ElectronicsStyle({ product }: { product: ProductType }) {
           <div className=" flex items-center justify-between ">
             <div className=" flex flex-col items-center justify-center flex-wrap">
               <h1 className="text-[16px] text-red-900  font-medium">
-                NPR <span className="text-[18px]">{product.price}</span>
+                {product.currency} {""}
+                <span className="text-[18px]">
+                  {product.price.toLocaleString()}
+                </span>
               </h1>
               <div className="h-4">
                 {" "}

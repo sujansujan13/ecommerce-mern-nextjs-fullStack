@@ -9,60 +9,47 @@ import ProductCard from "@/utils/product-card";
 import MobileFilters from "@/components/Groceries/MobileFilters";
 import Link from "next/link";
 import { ProductType } from "../../../Types/ProductType";
+import { productApi } from "@/api/productApi";
 
 export default function page() {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("popularity");
-
-  const fetchGroceries = async (signal: AbortSignal) => {
-    try {
-      setLoading(true);
-
-      const res = await fetch(
-        `http://localhost:4000/api/products?category=groceries&search=${searchQuery}`,
-        { signal },
-      );
-
-      if (!res.ok) throw new Error("Fetch Error");
-
-      const data = await res.json();
-      setProducts(data.products || data);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.name === "AbortError" || error.message.includes("aborted")) {
-          return;
-        }
-        console.error("Real API error", error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
-
-    fetchGroceries(signal);
-    return () => controller.abort();
-  }, []);
+  const [sortBy, setSortBy] = useState("Popularity");
 
   useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
+    const controller = new AbortController(); // For cleanup
+    setLoading(true);
 
-    // Debounce the search input to avoid too many API calls
-    const debounceTimeout = setTimeout(() => {
-      fetchGroceries(signal);
-    }, 500); // Adjust the debounce delay as needed
+    // Simulate API call with timeout (replace with actual API call)
+    const debounceTimer = setTimeout(() => {
+      productApi
+        .getProducts({
+          category: "groceries",
+          search: searchQuery,
+          sort: sortBy,
+        })
+        .then((data) => {
+          setProducts(data.products);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            console.error("Error fetching products:", err);
+          }
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }, 500); // 500ms debounce
 
+    // Cleanup function to clear timeout and abort fetch on unmount or query change
     return () => {
-      clearTimeout(debounceTimeout);
+      clearTimeout(debounceTimer);
       controller.abort();
     };
-  }, [searchQuery]);
+  }, [searchQuery, sortBy]); // Refetch when search or sort changes
 
   return (
     // {/* Page level vertical space */}
@@ -80,7 +67,7 @@ export default function page() {
           <GroceryLeftBar />
         </aside>
         <main className="flex-1 space-y-4 ">
-          <div className="w-full flex flex-col md:flex-row md:items-center gap-2.5 md:gap-4">
+          <div className="w-full min-w-60 flex flex-col md:flex-row md:items-center gap-2.5 md:gap-4">
             <div className="w-full md:max-w-md ">
               <SearchInput
                 value={searchQuery}
@@ -88,7 +75,7 @@ export default function page() {
                 placeholder="Search for groceries..."
               />
             </div>
-            <SortDropDown value={sortBy} onChange={setSortBy} />
+            <SortDropDown defaultValue={sortBy} onValueChange={setSortBy} />
           </div>
           {/* productCard */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 h-screen overflow-y-auto pr-2">
