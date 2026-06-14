@@ -11,7 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { SyntheticEvent, useState } from "react";
-import { useAuth } from "../../../../context/AuthProvider";
+import { useAuth } from "../../../context/AuthProvider";
 
 export default function page() {
   const [email, setEmail] = useState<string>("");

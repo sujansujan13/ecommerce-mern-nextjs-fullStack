@@ -1,4 +1,6 @@
-import React from "react";
+// teen otai card ma eutai type ko action garnu parne vayeko le tyo action custom hook banayeko xa
+"use client";
+import React, { SyntheticEvent, useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardFooter } from "../components/ui/card";
 import Image from "next/image";
 import { Button } from "../components/ui/button";
@@ -6,6 +8,8 @@ import { Heart, ShoppingBag, ShoppingCart, Star } from "lucide-react";
 import Rating from "@/utils/Rating";
 // product-type
 import { ProductType } from "../Types/ProductType";
+import { useCart } from "../context/cartContext";
+import Link from "next/link";
 
 // #MASTERSTROKE#: Never use fixed width and height for cards. Always let the content decide the height and width. This ensures your design is responsive and works on all screen sizes. Use padding and margins to create space instead of fixed dimensions.
 type CardProps = {
@@ -28,6 +32,7 @@ export default function ProductCard({ variant, product }: CardProps) {
 }
 
 function TrendingStyle({ product }: { product: ProductType }) {
+  const { handleAdd, isAdding } = useAddToCart(product);
   return (
     <Card className="overflow-hidden border-none outline-none w-full p-4.5 lg:p-4 rounded-2xl bg-background">
       {/* here goes image and love icon */}
@@ -62,7 +67,7 @@ function TrendingStyle({ product }: { product: ProductType }) {
               {product.name}
             </h2>
           </div>
-          <div className="flex items-center gap-1 ">
+          <div className="flex  items-center gap-1 ">
             <h1 className="text-[20px] text-red-900 xl:text-[16px] font-medium">
               NPR {product.price.toLocaleString()}
             </h1>
@@ -75,16 +80,25 @@ function TrendingStyle({ product }: { product: ProductType }) {
         </div>
         <Button
           variant={"destructive"}
+          onClick={handleAdd}
+          disabled={isAdding}
           className={`w-full rounded-lg py-5 bg-red-900 text-white text-lg xl:text-sm xl:font-semibold`}
         >
-          Add to Cart
+          {isAdding ? "Adding..." : "Added to Cart"}
         </Button>
       </div>
     </Card>
   );
 }
 
+// importing toast from sonner
+import { toast } from "sonner";
+import { useAddToCart } from "@/hooks/useAddToCart";
+
 function ElectronicsStyle({ product }: { product: ProductType }) {
+  const { handleAdd, isAdding } = useAddToCart(product);
+
+  const productUrl = `/product/${product.category}/${product.slug}`;
   return (
     /* 
        IMPROVEMENT: Removed fixed widths (lg:w-54). 
@@ -94,33 +108,39 @@ function ElectronicsStyle({ product }: { product: ProductType }) {
     <Card className="group overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl w-full bg-white">
       {/* here goes image and love icon */}
       <CardContent className={`relative  aspect-square p-0 overflow-hidden `}>
-        <Image
-          src={product?.images?.[0] as string}
-          alt={product.name}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105 "
-        />
-        <div className="absolute  h-full  inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
-        {/* featured button */}
-        {product.isFeatured && (
-          <Button
-            variant={"secondary"}
-            size={"sm"}
-            className={`absolute top-3 left-3 text-[10px] bg-[#680007] text-white `}
-          >
-            <h3 className="uppercase ">Featured</h3>
-          </Button>
-        )}
-        {/* favoutite button */}
-        {product.badge && (
-          <Button
-            size={"sm"}
-            className={` absolute top-3 right-3 text-[10px] bg-blue-400 text-white `}
-          >
-            {product.badge}
-          </Button>
-        )}
+        <Link
+          href={productUrl}
+          className="block relative aspect-square overflow-hidden bg-stone-50"
+        >
+          <Image
+            src={product?.images?.[0] as string}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105 "
+          />
+
+          <div className="absolute  h-full  inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+          {/* featured button */}
+          {product.isFeatured && (
+            <Button
+              variant={"secondary"}
+              size={"sm"}
+              className={`absolute top-3 left-3 text-[10px] bg-[#680007] text-white `}
+            >
+              <h3 className="uppercase ">Featured</h3>
+            </Button>
+          )}
+          {/* favoutite button */}
+          {product.badge && (
+            <Button
+              size={"sm"}
+              className={` absolute top-3 right-3 text-[10px] bg-blue-400 text-white `}
+            >
+              {product.badge}
+            </Button>
+          )}
+        </Link>
       </CardContent>
       <div className="flex flex-col items-start w-full  px-4 pb-2    ">
         <div className="w-full space-y-3">
@@ -163,10 +183,13 @@ function ElectronicsStyle({ product }: { product: ProductType }) {
             </div>
 
             <Button
+              onClick={handleAdd}
+              disabled={isAdding}
               variant={"destructive"}
-              className={` rounded-full p-4 bg-red-900 text-white text-lg xl:text-sm xl:font-semibold`}
+              className={` rounded-full p-4 bg-red-900 hover:bg-red-950 text-white text-lg xl:text-sm xl:font-semibold`}
             >
               <ShoppingCart
+                className={`h-5 w-5 ${isAdding ? "animate-pulse" : ""}`}
                 style={{ height: "20", width: "20" }}
                 strokeWidth={3}
               />
@@ -179,9 +202,11 @@ function ElectronicsStyle({ product }: { product: ProductType }) {
 }
 
 function FashionStyle({ product }: { product: ProductType }) {
+  const { handleAdd, isAdding } = useAddToCart(product);
   // if ((product.numReviews as string) > "1000") {
   //   product.numReviews : product.numReviews / "1000";
   // }
+
   return (
     <div>
       <Card className="rounded-sm hover:shadow-2xl">
@@ -228,7 +253,11 @@ function FashionStyle({ product }: { product: ProductType }) {
               )}
             </div>
             {/* shopping-buuton */}
-            <Button className="h-11.5 w-10  ">
+            <Button
+              onClick={handleAdd}
+              disabled={isAdding}
+              className={`h-11.5 w-10 ${isAdding ? "animate-pulse" : ""} cursor-pointer hover:bg-red-700 `}
+            >
               <ShoppingBag size={40} strokeWidth={3} />
             </Button>
           </div>
@@ -250,6 +279,7 @@ const badgeStyle: Record<string, string> = {
   "BEST SELLER": "bg-[#680006]",
 };
 function GroceriesStyle({ product }: { product: ProductType }) {
+  const { handleAdd, isAdding } = useAddToCart(product);
   return (
     // Because the Image itself is overflowing outside the rounded container. We need to make the parent container relative and set overflow-hidden to ensure the image is contained within the rounded corners.
     <div>
@@ -296,7 +326,11 @@ function GroceriesStyle({ product }: { product: ProductType }) {
             </h1>
           </div>
           <div className="mt-auto">
-            <Button className="w-full h-10.5 rounded-xl bg-[#680006] hover:bg-[#d03139] text-white flex items-center gap-2 cursor-pointer">
+            <Button
+              onClick={handleAdd}
+              disabled={isAdding}
+              className="w-full h-10.5 rounded-xl bg-[#680006] hover:bg-[#d03139] text-white flex items-center gap-2 cursor-pointer"
+            >
               <ShoppingCart strokeWidth={2.5} />
               <span className="text-sm md:text-[16px] font-bold">
                 Add to Cart

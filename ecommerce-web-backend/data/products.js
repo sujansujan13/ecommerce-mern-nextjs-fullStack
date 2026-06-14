@@ -20,7 +20,7 @@ const products = [
     category: "electronics",
     originRegion: "Imported",
     inStock: true,
-    stockCount: 12,
+    stockCount: 1,
     warranty: "1 Year Brand Warranty",
     attributes: [
       { key: "capacity", name: "Capacity", value: "4.5 Liters" },
@@ -144,8 +144,8 @@ const products = [
     ],
     category: "electronics",
     originRegion: "Imported",
-    inStock: false,
-    stockCount: 0,
+    inStock: true,
+    stockCount: 3,
     warranty: "2 Years Comprehensive Warranty",
     attributes: [
       {

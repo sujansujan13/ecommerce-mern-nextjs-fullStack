@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist } from "next/font/google";
 import { Manrope } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/utils/navbar";
-import MobileNav from "@/utils/mobile-nav";
-import Footer from "@/utils/footer";
+
 import { cn } from "@/lib/utils";
 import AuthProvider from "../context/AuthProvider";
+import CartProvider from "@/context/cartContext";
+import { Toaster } from "@/components/ui/sonner";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -50,7 +50,30 @@ export default function RootLayout({
       <body
         className={`${plusJakartaSans.className} min-h-full flex flex-col overflow-x-hidden`}
       >
-        <AuthProvider> {children}</AuthProvider>
+        <AuthProvider>
+          <CartProvider>
+            <div className="flex-1">{children}</div>
+            {/* 🚀 Mount the global toaster registry portal here */}
+            <Toaster
+              richColors
+              closeButton
+              position="top-center"
+              // 🚀 Add wrapper styling to handle the backdrop blur container
+              // className="fixed inset-0 pointer-events-none z-50 flex justify-center"
+              // 2. Safely apply native CSS variables to blur the full backdrop window
+              // style={{
+              //   // @ts-ignore (Optional: Prevents TS warnings for Sonner-specific custom properties)
+              //   "--backdrop-blur": "40px",
+              //   "--backdrop-bg": "rgba(0, 0, 0, 0.60)",
+              // }}
+              // toastOptions={{
+              //   // Keeps the individual toasts clickable while the rest of the full-screen container passes clicks through
+              //   className: "pointer-events-auto",
+              // }}
+            />{" "}
+            {/* 💡 richColors enables auto green/red colors */}
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

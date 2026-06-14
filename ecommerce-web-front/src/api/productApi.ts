@@ -1,11 +1,14 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const productApi = {
-  async getProducts(params: {
-    category: string;
-    search?: string;
-    sort?: string;
-    page?: number;
-  }) {
+  async getProducts(
+    params: {
+      category: string;
+      search?: string;
+      sort?: string;
+      page?: number;
+    },
+    signal?: AbortSignal,
+  ) {
     const query = new URLSearchParams();
 
     if (params?.category) {
@@ -17,9 +20,9 @@ export const productApi = {
     if (params?.sort) {
       query.append("sort", params.sort);
     }
-    // if (params?.page) {
-    //   query.append("page", params.page.toString());
-    // }
+    if (params?.page) {
+      query.append("page", params.page.toString());
+    }
     const queryString = query.toString(); // Convert query parameters to string
 
     const url = queryString
@@ -28,7 +31,7 @@ export const productApi = {
 
     console.log("Fetching:", url);
 
-    const res = await fetch(url);
+    const res = await fetch(url, { signal });
 
     if (!res.ok) {
       const errorData = await res.text();
@@ -39,8 +42,15 @@ export const productApi = {
     return res.json();
   },
 
-  async getProductBySlug(category: string, slug: string) {
-    const res = await fetch(`${API_URL}/api/products/${category}/${slug}`);
+  async getProductBySlug(
+    category: string,
+    slug: string,
+    options?: RequestInit,
+  ) {
+    const res = await fetch(
+      `${API_URL}/api/products/${category}/${slug}`,
+      options,
+    );
 
     if (!res.ok) {
       const errorData = await res.text();

@@ -1,3 +1,4 @@
+"use client";
 import CategorySection from "@/components/ui/home/category-section";
 import HeroSection from "@/components/ui/home/hero-section";
 import LocalSeller from "@/components/ui/home/local-seller";

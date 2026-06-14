@@ -1,5 +1,6 @@
 import BreadCrumb from "@/utils/Breadcrumb";
 import ProductClient from "@/components/Electronics/slug/ProductClient";
+import { productApi } from "@/api/productApi";
 
 interface Paramprops {
   // Next.js automatically collects these dynamic URL parts and wraps them inside an object called params.
@@ -11,24 +12,24 @@ export default async function page({ params }: Paramprops) {
   // destructuring
   const { category, slug } = await params;
   // console.log(slug);
-  const res = await fetch(
-    `http://localhost:4000/api/products/${category}/${slug}`,
-    {
-      cache: "no-store",
-    },
-  );
+  // const res = await fetch(
+  //   `http://localhost:4000/api/products/${category}/${slug}`,
+  //   {
+  //     cache: "no-store",
+  //   },
+  // );
 
-  if (!res.ok) throw new Error("Fetch failed");
-
-  const data = await res.json();
-
-  const currentProduct = data.product;
-  const relatedProduct = data.relatedProducts;
+  const data = await productApi.getProductBySlug(category, slug, {
+    cache: "no-store",
+  });
 
   return (
     <div className="common-box py-4 md:py-8 space-y-4 bg-[#fff8f7]">
       <BreadCrumb />
-      <ProductClient product={currentProduct} relatedProduct={relatedProduct} />
+      <ProductClient
+        product={data.product}
+        relatedProduct={data.relatedProducts}
+      />
     </div>
   );
 }

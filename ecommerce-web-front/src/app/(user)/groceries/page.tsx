@@ -25,11 +25,14 @@ export default function page() {
     // Simulate API call with timeout (replace with actual API call)
     const debounceTimer = setTimeout(() => {
       productApi
-        .getProducts({
-          category: "groceries",
-          search: searchQuery,
-          sort: sortBy,
-        })
+        .getProducts(
+          {
+            category: "groceries",
+            search: searchQuery,
+            sort: sortBy,
+          },
+          controller.signal,
+        )
         .then((data) => {
           setProducts(data.products);
           setLoading(false);

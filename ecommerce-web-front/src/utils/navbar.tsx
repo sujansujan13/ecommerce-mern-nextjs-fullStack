@@ -76,6 +76,8 @@ export default function Navbar() {
     router.push("/");
   };
 
+  const itemCount: number = 0; // to be replaced after orderContext or cartContext
+
   return (
     <nav className=" fixed top-0 z-50 w-full border-b border-background/40 bg-background  ">
       <div className="common-box  shadow-sm ">
@@ -138,12 +140,25 @@ export default function Navbar() {
               </div>
             )}
 
-            <Button variant={"ghost"} aria-label="Cart">
-              <ShoppingCart
-                className="stroke-[#4b5563]"
-                style={{ height: "1.5rem", width: "1.5rem" }}
-              />
-            </Button>
+            {/* #IMPORTANT# -> hamile link (href) ma pani condition lagauna milxa  */}
+            {/* #NEW-CONCEPT# -> yedi hamile ?redirect = link gareu vane jun page bata signUp page ma direct vako ho tei page redirect haunxau */}
+            <Link href={user ? "/checkout" : "/login?redirect=/cart"}>
+              <Button
+                variant={"ghost"}
+                aria-label={`Shopping cart, ${itemCount} item${itemCount !== 1 ? "s" : " "}`}
+                className="relative"
+              >
+                <ShoppingCart
+                  className="stroke-[#4b5563]"
+                  style={{ height: "1.5rem", width: "1.5rem" }}
+                />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
 
             <SearchDialog
               value={searchQuery}

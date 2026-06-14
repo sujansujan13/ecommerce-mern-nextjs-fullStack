@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const products = require("./data/products");
 const connectDB = require("./config/db");
 const product = require("./models/product");
+const Cart = require("./models/Cart");
 
 const seedProducts = async () => {
   try {
@@ -13,8 +14,12 @@ const seedProducts = async () => {
     await product.deleteMany();
     console.log("Old Data Cleared");
 
+    // ✅ Clear out stale carts so dead product IDs don't break your frontend populate!
+    await Cart.deleteMany({});
+    console.log("Old Data & Carts Cleared");
+
     // inserting products first
-    const createdProducts = await product.insertMany(products);
+    await product.insertMany(products);
     console.log("Products Seeded");
 
     console.log("Seeding Completed");

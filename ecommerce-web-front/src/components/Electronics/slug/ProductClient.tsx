@@ -15,6 +15,7 @@ import Rating from "../../../utils/Rating";
 import AttributeDetails from "./AttributeDetails";
 import CommentSection from "@/utils/CommentSection";
 import RelatedProduct from "@/utils/RelatedProduct";
+import { useAddToCart } from "../../../hooks/useAddToCart";
 
 export default function ProductClient({
   product,
@@ -23,6 +24,7 @@ export default function ProductClient({
   product: ProductType;
   relatedProduct: ProductType[];
 }) {
+  const { handleAdd, isAdding } = useAddToCart(product);
   const [selected, setSelected] = useState(
     (product?.images?.[0] as string) || "",
   );
@@ -184,14 +186,18 @@ export default function ProductClient({
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col items-center gap-1">
-              <BadgeCheck size={16} strokeWidth={2.5} />
-              <span className="text-sm font-bold"> {product.warranty}</span>
-            </div>
+            {product.warranty && (
+              <div className="flex flex-col items-center gap-1">
+                <BadgeCheck size={16} strokeWidth={2.5} />
+                <span className="text-sm font-bold"> {product.warranty}</span>
+              </div>
+            )}
           </div>
           {/* cart and buy button */}
           <div className="flex flex-col gap-3 ">
             <Button
+              onClick={handleAdd}
+              disabled={isAdding}
               variant={"outline"}
               className="py-6 rounded-xl font-bold flex items-center gap-2 cursor-pointer bg-[#fff8f7] shadow-2xl hover:bg-red-500  transition-colors duration-300 border-2 border-red-700 text-red-700 tracking-wider group "
             >

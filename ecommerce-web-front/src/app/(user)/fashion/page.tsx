@@ -67,11 +67,14 @@ export default function page() {
 
     const debounceTimer = setTimeout(() => {
       productApi
-        .getProducts({
-          category: "fashion",
-          search: searchQuery,
-          sort: sortBy,
-        })
+        .getProducts(
+          {
+            category: "fashion",
+            search: searchQuery,
+            sort: sortBy,
+          },
+          controller.signal,
+        )
         .then((data) => {
           setProducts(data.products);
           setLoading(false);
@@ -84,11 +87,11 @@ export default function page() {
         .finally(() => {
           setLoading(false);
         });
-      return () => {
-        clearTimeout(debounceTimer); // clear timeout on unmount or before next effect
-        controller.abort(); // cancel fetch if component unmounts
-      };
     }, 500); // debounce API calls by 500ms
+    return () => {
+      clearTimeout(debounceTimer); // clear timeout on unmount or before next effect
+      controller.abort(); // cancel fetch if component unmounts
+    };
   }, [searchQuery, sortBy]);
 
   return (
