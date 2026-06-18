@@ -154,7 +154,7 @@ exports.logout = async (req, res) => {
   try {
     const token = req.cookies.refreshToken;
     if (token) {
-      const decoded = jwt.verify(token, process.env.JWT_REFRESH_TOKEN);
+      const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
       await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
     }
     res.clearCookie("refreshToken");

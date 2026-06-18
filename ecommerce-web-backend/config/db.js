@@ -14,4 +14,5 @@ const connectDB = async () => {
 };
 
 // When you use module.exports = connectDB;, you are exporting the entire function itself, not the result of running it.
+// So write connectDB instead of connectDB()
 module.exports = connectDB;
