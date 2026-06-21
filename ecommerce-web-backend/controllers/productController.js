@@ -1,6 +1,6 @@
 // Frontend triggers search/sort via state changes → sends query params → backend builds MongoDB filter + sort logic → returns updated products list.
 const Product = require("../models/product");
-
+// handler function
 const getAllProducts = async (req, res) => {
   try {
     // req.query batw category shodhne (e.g., /api/products?category=electronics)

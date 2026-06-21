@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { randomBytes } = require("crypto");
 
 const OrderItemSchema = new mongoose.Schema({
   productId: {
@@ -17,6 +18,7 @@ const OrderItemSchema = new mongoose.Schema({
 const OrderSchema = new mongoose.Schema(
   {
     item: [OrderItemSchema],
+
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -24,6 +26,7 @@ const OrderSchema = new mongoose.Schema(
       // #IMP#:index:true
       index: true, //Speeds up the user order history queries
     },
+
     shippingAddress: {
       fullName: { type: String, required: true, trim: true }, //trim removes spaces from start and finish
       phoneNumber: { type: String, required: true, trim: true },
@@ -31,6 +34,7 @@ const OrderSchema = new mongoose.Schema(
       municipality: { type: String, required: true, trim: true },
       streetAddress: { type: String, required: true, trim: true },
     },
+
     pricing: {
       subTotal: { type: Number, required: true },
       shippingFee: { type: Number, required: true, default: 0 },
@@ -44,6 +48,7 @@ const OrderSchema = new mongoose.Schema(
         uppercase: true,
       },
     },
+
     paymentDetails: {
       gateway: {
         type: String,
@@ -56,7 +61,9 @@ const OrderSchema = new mongoose.Schema(
         default: "pending",
       },
       transactionId: { type: String, default: null }, // returned by digital gateways
+      paidAt: { type: Date, default: null }, //useful for reports, refunds and all
     },
+
     orderStatus: {
       type: String,
       enum: ["placed", "processing", "shipped", "delivered", "cancelled"],
@@ -64,13 +71,66 @@ const OrderSchema = new mongoose.Schema(
       // #WHY#->index:true
       index: true,
     },
+
+    // 👇 Lifecycle timestamps
+    shippedAt: {
+      type: Date,
+      default: null,
+    },
+    deliveredAt: {
+      type: Date,
+      default: null,
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
+
+    cancellationReason: {
+      type: String,
+      default: null,
+    },
+
+    statusHistory: [
+      {
+        status: {
+          type: String,
+          enum: ["placed", "processing", "shipped", "delivered", "cancelled"],
+        },
+        changedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
+    // #WHY# -> index:true
+    // #DOUBT# -> default: () => { const random = randomBytes(4).toString("hex").toUpperCase()return `HTM-${random}`; }
     trackingId: {
       type: String,
+      index: true,
       unique: true,
-      default: () => `HIM-${Math.floor(100000 + Math.random() * 900000)}`, // Generates readable tracker IDs
+      default: () => {
+        const random = randomBytes(4).toString("hex").toUpperCase();
+        return `HTM-${random}`;
+      }, // Generates readable tracker IDs
     },
   },
   { timestamps: true },
 );
 
 module.exports = mongoose.model("Order", OrderSchema);
+
+// DONE IN CONTROLLER
+// OrderSchema.pre("save", function (next) {
+//   this.pricing.subtotal = this.items.reduce((acc, item) => {
+//     return acc + item.priceSnapshot * item.quantity;
+//   }, 0);
+
+//   this.pricing.grandTotal =
+//     this.pricing.subtotal +
+//     this.pricing.shippingFee -
+//     this.pricing.discountAmount;
+
+//   next();
+// });
