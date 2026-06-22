@@ -92,7 +92,7 @@ exports.createOrder = async (req, res) => {
       items: orderItemsProcessed,
       shippingAddress,
       pricing: {
-        subtotal: calculatedSubTotal,
+        subTotal: calculatedSubTotal,
         shippingFee,
         discountAmount,
         grandTotal,

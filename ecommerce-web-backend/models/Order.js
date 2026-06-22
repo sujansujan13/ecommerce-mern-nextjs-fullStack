@@ -17,7 +17,7 @@ const OrderItemSchema = new mongoose.Schema({
 
 const OrderSchema = new mongoose.Schema(
   {
-    item: [OrderItemSchema],
+    items: [OrderItemSchema],
 
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -56,7 +56,7 @@ const OrderSchema = new mongoose.Schema(
         required: true,
       },
       status: {
-        type: string,
+        type: String,
         enum: ["pending", "completed", "failed", "refunded"],
         default: "pending",
       },
